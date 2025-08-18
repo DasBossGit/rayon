@@ -19,7 +19,6 @@
     # main thread to avoid the forbidden `atomics.wait`.
     #
     # Only useful on the `wasm32-unknown-unknown` target.
-    default       = ["terminate_threadpool"]
     web_spin_lock = ["dep:wasm_sync", "rayon-core/web_spin_lock"]
 
 [dependencies]
