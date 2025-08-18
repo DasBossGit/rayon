@@ -96,6 +96,10 @@ pub use self::thread_pool::current_thread_index;
 pub use self::thread_pool::ThreadPool;
 pub use self::thread_pool::{yield_local, yield_now, Yield};
 
+#[cfg(feature = "terminate_threadpool")]
+pub use self::registry::{terminate_and_wait, terminate};
+
+
 #[cfg(not(feature = "web_spin_lock"))]
 use std::sync;
 

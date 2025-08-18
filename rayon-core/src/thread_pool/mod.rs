@@ -48,6 +48,33 @@ pub struct ThreadPool {
 }
 
 impl ThreadPool {
+    #[cfg(feature = "terminate_threadpool")]
+    /// Terminate the thread pool and wait for all threads to finish.
+    pub fn terminate_and_wait(self) {
+        let registry = self.registry.clone();
+        self.registry.terminate(); //
+        drop(self); // sends all threads the quit signal
+        Self::wait_for_arc(registry); // signal threads to terminate
+    }
+    #[cfg(feature = "terminate_threadpool")]
+    /// Terminate the thread pool in an asynchronous manner.
+    /// This will send a quit signal to all threads, but will not block for them
+    /// to finish executing.
+    pub fn terminate(self) {
+        self.registry.terminate(); //
+        drop(self); // sends all threads the quit signal
+    }
+    #[cfg(feature = "terminate_threadpool")]
+    fn wait_for_arc<T>(x: Arc<T>) -> T {
+        match Arc::try_unwrap(x) {
+            Ok(inner) => inner,
+            Err(x) => {
+                std::thread::sleep(std::time::Duration::from_millis(1));
+                Self::wait_for_arc(x)
+            }
+        }
+    }
+
     #[deprecated(note = "Use `ThreadPoolBuilder::build`")]
     #[allow(deprecated)]
     /// Deprecated in favor of `ThreadPoolBuilder::build`.

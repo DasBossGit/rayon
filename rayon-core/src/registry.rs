@@ -182,6 +182,45 @@ where
     set_global_registry(|| Registry::new(builder))
 }
 
+/// Terminates the global thread pool and waits for all worker threads to finish.
+#[cfg(feature = "terminate_threadpool")]
+pub unsafe fn terminate_and_wait() {
+    unsafe {
+        THE_REGISTRY.take().map(|registry| {
+            let reg_cl = Arc::clone(&registry);
+            registry.terminate();
+            drop(registry);
+            wait_for_arc(reg_cl);
+        });
+        THE_REGISTRY = None;
+    };
+}
+
+/// Terminate the thread pool in an asynchronous manner.
+/// This will send a quit signal to all threads, but will not block for them
+/// to finish executing.
+#[cfg(feature = "terminate_threadpool")]
+pub unsafe fn terminate() {
+    unsafe {
+        THE_REGISTRY.take().map(|registry| {
+            registry.terminate();
+            drop(registry);
+        });
+        THE_REGISTRY = None;
+    };
+}
+
+#[cfg(feature = "terminate_threadpool")]
+fn wait_for_arc<T>(x: Arc<T>) -> T {
+    match Arc::try_unwrap(x) {
+        Ok(inner) => inner,
+        Err(x) => {
+            std::thread::sleep(std::time::Duration::from_millis(1));
+            wait_for_arc(x)
+        }
+    }
+}
+
 /// Starts the worker threads (if that has not already happened)
 /// by creating a registry with the given callback.
 fn set_global_registry<F>(registry: F) -> Result<&'static Arc<Registry>, ThreadPoolBuildError>
