@@ -122,6 +122,9 @@ pub use rayon_core::{join, join_context};
 pub use rayon_core::{spawn, spawn_fifo};
 pub use rayon_core::{yield_local, yield_now, Yield};
 
+#[cfg(feature = "terminate_threadpool")]
+pub use rayon_core::{terminate, terminate_and_wait};
+
 /// We need to transmit raw pointers across threads. It is possible to do this
 /// without any unsafe code by converting pointers to usize or to AtomicPtr<T>
 /// then back to a raw pointer for use. We prefer this approach because code
